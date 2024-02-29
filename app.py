@@ -97,19 +97,6 @@ def generate_image_summary(amount, date, reason, name, file_path, rib_path=None)
     # Envoyer le fichier PDF en réponse
     return send_file(img_output_path, as_attachment=True)
 
-    # Charger l'image et l'ajouter à l'image créée
-    original_image = Image.open(file_path)
-    img.paste(original_image, (150, 70))
-
-    # Enregistrer l'image composée au format PDF
-    img.save(img_output_path, format='PDF')
-
-    # Vous pouvez supprimer le fichier image temporaire si vous le souhaitez
-    os.remove(file_path)
-
-    # Envoyer le fichier PDF en réponse
-    return send_file(img_output_path, as_attachment=True)
-
 @app.route('/download/<filename>')
 def download(filename):
     return send_file(f'uploads/{filename}', as_attachment=True)
