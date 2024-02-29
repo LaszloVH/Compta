@@ -16,8 +16,10 @@ def submit():
     amount = request.form['amount']
     date = request.form['date']
     reason = request.form['reason']
+    name = request.form['name']
 
     file = request.files['file']
+    rib_file = request.files.get('rib')  # Utilisez get pour éviter une KeyError si le champ n'est pas présent
 
     if file.filename.endswith(('.pdf', '.jpg', '.jpeg', '.png')):
         # Utilisez secure_filename pour obtenir un nom de fichier sûr
@@ -31,16 +33,24 @@ def submit():
         file_path = os.path.join(folder_name, filename)
         file.save(file_path)
 
+        if rib_file:
+            # Gérer le fichier RIB s'il est présent
+            rib_filename = f'RIB-{secure_filename(name)}.pdf'  # Renommer le fichier RIB
+            rib_path = os.path.join(folder_name, rib_filename)
+            rib_file.save(rib_path)
+
         if file.filename.endswith('.pdf'):
-            generate_pdf(amount, date, reason, file_path)
+            generate_pdf(amount, date, reason, name, file_path, rib_path if rib_file else None)
         elif file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-            generate_image_summary(amount, date, reason, file_path)
+            generate_image_summary(amount, date, reason, name, file_path, rib_path if rib_file else None)
+
 
         return 'Formulaire soumis avec succès!'
     else:
         return 'Format de fichier non pris en charge. Veuillez utiliser un fichier PDF, JPG, JPEG ou PNG.'
 
-def generate_pdf(amount, date, reason, file_path):
+
+def generate_pdf(amount, date, reason, name, file_path, rib_path=None):
     # Modifier le chemin pour enregistrer le fichier dans le dossier approprié
     pdf_output_path = f'{os.path.splitext(file_path)[0]}_récap.pdf'
     c = canvas.Canvas(pdf_output_path)
@@ -49,7 +59,7 @@ def generate_pdf(amount, date, reason, file_path):
     c.drawString(100, 710, f'Motif: {reason}')
     c.save()
 
-def generate_image_summary(amount, date, reason, file_path):
+def generate_image_summary(amount, date, reason, name, file_path, rib_path=None):
     # Modifier le chemin pour enregistrer le fichier dans le dossier approprié
     img_output_path = f'{os.path.splitext(file_path)[0]}_récap.pdf'
     img = Image.new('RGB', (400, 200), color='white')
