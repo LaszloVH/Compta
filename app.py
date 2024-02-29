@@ -1,9 +1,5 @@
 from flask import Flask, render_template, request, send_file
 from reportlab.pdfgen import canvas
-from pdf2image import convert_from_path
-from PyPDF2 import PdfFileMerger
-from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
 from werkzeug.utils import secure_filename
 import os
 import img2pdf
