@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, send_file
 from reportlab.pdfgen import canvas
+from pdf2image import convert_from_path
+from PyPDF2 import PdfFileMerger
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from werkzeug.utils import secure_filename
 import os
+import img2pdf
 
 app = Flask(__name__)
 
@@ -13,15 +16,16 @@ def index():
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    amount = request.form['amount']
-    date = request.form['date']
-    reason = request.form['reason']
     name = request.form['name']
-
+    date = request.form['date']
+    amount = request.form['amount']
+    reason = request.form['reason']
+    
     file = request.files['file']
     rib_file = request.files.get('rib')  # Utilisez get pour éviter une KeyError si le champ n'est pas présent
 
     if file.filename.endswith(('.pdf', '.jpg', '.jpeg', '.png')):
+
         # Utilisez secure_filename pour obtenir un nom de fichier sûr
         filename = secure_filename(file.filename)
         
@@ -33,16 +37,23 @@ def submit():
         file_path = os.path.join(folder_name, filename)
         file.save(file_path)
 
-        if rib_file:
-            # Gérer le fichier RIB s'il est présent
-            rib_filename = f'RIB-{secure_filename(name)}.pdf'  # Renommer le fichier RIB
-            rib_path = os.path.join(folder_name, rib_filename)
-            rib_file.save(rib_path)
-
         if file.filename.endswith('.pdf'):
-            generate_pdf(amount, date, reason, name, file_path, rib_path if rib_file else None)
+            generate_info_pdf(name, date, amount, reason)
         elif file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-            generate_image_summary(amount, date, reason, name, file_path, rib_path if rib_file else None)
+            generate_facture_pdf(file_path, folder_name)
+
+        if rib_file:
+            # Sauvegarder le fichier dans le dossier créé
+            rib_filename = secure_filename(rib_file.filename)
+            rib_file_path = os.path.join(folder_name, rib_filename)
+            rib_file.save(rib_file_path)
+
+        # Si le fichier RIB est déjà un PDF, le renommer en RIB-{Nom}.pdf
+        if rib_filename.lower().endswith('.pdf'):
+            os.rename(rib_file_path, os.path.join(folder_name, f"RIB-{name}.pdf"))
+        else:
+            # Sinon, convertir l'image en PDF
+            generate_rib_pdf(rib_file_path, folder_name, name)
 
 
         return 'Formulaire soumis avec succès!'
@@ -50,52 +61,36 @@ def submit():
         return 'Format de fichier non pris en charge. Veuillez utiliser un fichier PDF, JPG, JPEG ou PNG.'
 
 
-def generate_pdf(amount, date, reason, name, file_path, rib_path=None):
+def generate_info_pdf(name, date, amount, reason):
     # Modifier le chemin pour enregistrer le fichier dans le dossier approprié
-    pdf_output_path = f'{os.path.splitext(file_path)[0]}_récap.pdf'
+    pdf_output_path = f'{os.path.splitext(file_path)[0]}_info.pdf'
     c = canvas.Canvas(pdf_output_path)
-    c.drawString(100, 750, f'Montant: {amount}')
+    c.drawString(100, 710, f'Blaze: {name}')
     c.drawString(100, 730, f'Date: {date}')
-    c.drawString(100, 710, f'Motif: {reason}')
+    c.drawString(100, 750, f'Montant: {amount}')
+    c.drawString(100, 770, f'Motif: {reason}')
     c.save()
 
-def generate_image_summary(amount, date, reason, name, file_path, rib_path=None):
-    # Modifier le chemin pour enregistrer le fichier dans le dossier approprié
-    img_output_path = f'{os.path.splitext(file_path)[0]}_récap.pdf'
-    img = Image.new('RGB', (827 , 1170), color='white')  # Ajustez la taille de l'image selon vos besoins
-    d = ImageDraw.Draw(img)
+def generate_facture_pdf(file_path, folder_name):
 
-    # Définir la police et la taille du texte
-    font = ImageFont.load_default()
+    # Ouvrir l'image et la convertir en PDF
+    with open(file_path, "rb") as img_file, open(os.path.join(folder_name, "facture.pdf"), "wb") as pdf_file:
+        pdf_bytes = img2pdf.convert(img_file.read())
+        pdf_file.write(pdf_bytes)
 
-    # Ajouter des marges
-    margin = 20
-
-    # Ajouter le texte avec des marges
-    d.text((margin, margin), f'Montant: {amount}', font=font, fill='black')
-    d.text((margin, margin + 20), f'Date: {date}', font=font, fill='black')
-    d.text((margin, margin + 40), f'Motif: {reason}', font=font, fill='black')
-
-    # Charger l'image et l'ajouter à l'image créée
-    original_image = Image.open(file_path)
-
-    # Redimensionner l'image pour s'adapter à la page
-    img_width, img_height = img.size
-    original_image.thumbnail((img_width - 2 * margin, img_height - 3 * margin))
-    
-    # Calculer la position pour centrer l'image
-    image_position = ((img_width - original_image.width) // 2, margin + 3 * margin)
-
-    img.paste(original_image, image_position)
-
-    # Enregistrer l'image composée au format PDF
-    img.save(img_output_path, format='PDF')
-
-    # Vous pouvez supprimer le fichier image temporaire si vous le souhaitez
+    # Supprimer l'image
     os.remove(file_path)
 
-    # Envoyer le fichier PDF en réponse
-    return send_file(img_output_path, as_attachment=True)
+def generate_rib_pdf(rib_file_path, folder_name, name):
+    
+    # Ouvrir l'image et la convertir en PDF
+    with open(rib_file_path, "rb") as img_file, open(os.path.join(folder_name, f"RIB-{name}.pdf"), "wb") as pdf_file:
+        pdf_bytes = img2pdf.convert(img_file.read())
+        pdf_file.write(pdf_bytes)
+
+    # Supprimer l'image
+    os.remove(rib_file_path)
+    
 
 @app.route('/download/<filename>')
 def download(filename):
