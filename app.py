@@ -38,7 +38,7 @@ def submit():
 
         return 'Formulaire soumis avec succès!'
     else:
-    return 'Format de fichier non pris en charge. Veuillez utiliser un fichier PDF, JPG, JPEG ou PNG.'
+        return 'Format de fichier non pris en charge. Veuillez utiliser un fichier PDF, JPG, JPEG ou PNG.'
 
 def generate_pdf(amount, date, reason, file_path):
     # Modifier le chemin pour enregistrer le fichier dans le dossier approprié
