@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, send_file
 from reportlab.pdfgen import canvas
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from werkzeug.utils import secure_filename
 import os
@@ -62,11 +62,40 @@ def generate_pdf(amount, date, reason, name, file_path, rib_path=None):
 def generate_image_summary(amount, date, reason, name, file_path, rib_path=None):
     # Modifier le chemin pour enregistrer le fichier dans le dossier approprié
     img_output_path = f'{os.path.splitext(file_path)[0]}_récap.pdf'
-    img = Image.new('RGB', (400, 200), color='white')
+    img = Image.new('RGB', (827 , 1170), color='white')  # Ajustez la taille de l'image selon vos besoins
     d = ImageDraw.Draw(img)
-    d.text((10, 10), f'Montant: {amount}', fill='black')
-    d.text((10, 30), f'Date: {date}', fill='black')
-    d.text((10, 50), f'Motif: {reason}', fill='black')
+
+    # Définir la police et la taille du texte
+    font = ImageFont.load_default()
+
+    # Ajouter des marges
+    margin = 20
+
+    # Ajouter le texte avec des marges
+    d.text((margin, margin), f'Montant: {amount}', font=font, fill='black')
+    d.text((margin, margin + 20), f'Date: {date}', font=font, fill='black')
+    d.text((margin, margin + 40), f'Motif: {reason}', font=font, fill='black')
+
+    # Charger l'image et l'ajouter à l'image créée
+    original_image = Image.open(file_path)
+
+    # Redimensionner l'image pour s'adapter à la page
+    img_width, img_height = img.size
+    original_image.thumbnail((img_width - 2 * margin, img_height - 3 * margin))
+    
+    # Calculer la position pour centrer l'image
+    image_position = ((img_width - original_image.width) // 2, margin + 3 * margin)
+
+    img.paste(original_image, image_position)
+
+    # Enregistrer l'image composée au format PDF
+    img.save(img_output_path, format='PDF')
+
+    # Vous pouvez supprimer le fichier image temporaire si vous le souhaitez
+    os.remove(file_path)
+
+    # Envoyer le fichier PDF en réponse
+    return send_file(img_output_path, as_attachment=True)
 
     # Charger l'image et l'ajouter à l'image créée
     original_image = Image.open(file_path)
