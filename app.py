@@ -1,6 +1,10 @@
 from flask import Flask, render_template, request, send_file
 from reportlab.pdfgen import canvas
 from werkzeug.utils import secure_filename
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from PyPDF2 import PdfMerger
 import os
 import img2pdf
 
@@ -37,6 +41,7 @@ def submit():
             generate_info_pdf(name, date, amount, reason)
         elif file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
             generate_facture_pdf(file_path, folder_name)
+            generate_info_pdf(name, date, amount, reason)
 
         if rib_file:
             # Sauvegarder le fichier dans le dossier créé
@@ -51,6 +56,7 @@ def submit():
             # Sinon, convertir l'image en PDF
             generate_rib_pdf(rib_file_path, folder_name, name)
 
+        merge_pdfs(folder_name, name)
 
         return 'Formulaire soumis avec succès!'
     else:
@@ -58,14 +64,21 @@ def submit():
 
 
 def generate_info_pdf(name, date, amount, reason):
-    # Modifier le chemin pour enregistrer le fichier dans le dossier approprié
-    pdf_output_path = f'{os.path.splitext(file_path)[0]}_info.pdf'
-    c = canvas.Canvas(pdf_output_path)
-    c.drawString(100, 710, f'Blaze: {name}')
-    c.drawString(100, 730, f'Date: {date}')
-    c.drawString(100, 750, f'Montant: {amount}')
-    c.drawString(100, 770, f'Motif: {reason}')
-    c.save()
+    # Créer un fichier PDF avec les informations dans un tableau de 4 colonnes
+    pdf = SimpleDocTemplate(f'uploads/{date}-{reason}/info.pdf', pagesize=letter)
+    data = [['Blaze :', 'Date :', 'Montant :', 'Raison :'],
+            [name, date, amount, reason]]
+    table = Table(data)
+
+    # Ajouter un style au tableau pour rendre les bordures apparentes
+    style = TableStyle([
+        ('BOX', (0,0), (-1,-1), 1, colors.black),
+        ('GRID', (0,0), (-1,-1), 1, colors.black)
+    ])
+    table.setStyle(style)
+
+    pdf.build([table])
+
 
 def generate_facture_pdf(file_path, folder_name):
 
@@ -86,7 +99,18 @@ def generate_rib_pdf(rib_file_path, folder_name, name):
 
     # Supprimer l'image
     os.remove(rib_file_path)
-    
+
+def merge_pdfs(folder_name, name):
+    # Fusionner les fichiers PDF facture et info
+    merger = PdfMerger()
+    merger.append(f'{folder_name}/info.pdf')
+    merger.append(f'{folder_name}/facture.pdf')
+    merger.write(f'{folder_name}/facture-{name}.pdf')
+    merger.close()
+
+    #Supprimer les PDF inutiles
+    os.remove(f'{folder_name}/facture.pdf')
+    os.remove(f'{folder_name}/info.pdf')
 
 @app.route('/download/<filename>')
 def download(filename):
