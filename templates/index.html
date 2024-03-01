@@ -1,23 +1,32 @@
-<link href="index.css" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <title>Votre application Flask</title>
+</head>
+<body>
+  <form method="POST" action="/submit" enctype="multipart/form-data" class="max-w-md mx-auto mt-4 p-4 bg-gray-100 rounded-md">
+    <label for="name" class="block font-bold">Nom:</label>
+    <input type="text" id="name" name="name" required class="w-full p-2 border rounded-md mt-1"><br>
 
-<form method="POST" action="/submit" enctype="multipart/form-data">
-    <label for="name">Nom:</label>
-    <input type="text" id="name" name="name" required><br>
+    <label for="date" class="block font-bold">Date:</label>
+    <input type="date" id="date" name="date" required class="w-full p-2 border rounded-md mt-1"><br>
 
-    <label for="date">Date:</label>
-    <input type="date" id="date" name="date" required><br>
+    <label for="amount" class="block font-bold">Montant:</label>
+    <input type="text" id="amount" name="amount" required class="w-full p-2 border rounded-md mt-1"><br>
 
-    <label for="amount">Montant:</label>
-    <input type="text" id="amount" name="amount" required><br>
+    <label for="reason" class="block font-bold">Motif:</label>
+    <input type="text" id="reason" name="reason" required class="w-full p-2 border rounded-md mt-1"><br>
 
-    <label for="reason">Motif:</label>
-    <input type="text" id="reason" name="reason" required><br>
+    <label for="file" class="block font-bold">Facture (PDF, JPG, JPEG, PNG):</label>
+    <input type="file" id="file" name="file" accept=".pdf, .jpg, .jpeg, .png" required class="w-full p-2 border rounded-md mt-1"><br>
 
-    <label for="file">Facture (PDF, JPG, JPEG, PNG):</label>
-    <input type="file" id="file" name="file" accept=".pdf, .jpg, .jpeg, .png" required><br>
+    <label for="rib" class="block font-bold">RIB (facultatif):</label>
+    <input type="file" id="rib" name="rib" accept=".pdf, .jpg, .jpeg, .png" class="w-full p-2 border rounded-md mt-1"><br>
 
-    <label for="rib">RIB (facultatif):</label>
-    <input type="file" id="rib" name="rib" accept=".pdf, .jpg, .jpeg, .png"><br>
-
-    <input type="submit" value="Soumettre">
-</form>
+    <input type="submit" value="Soumettre" class="w-full p-2 bg-blue-500 text-white rounded-md mt-4 cursor-pointer">
+  </form>
+</body>
+</html>
