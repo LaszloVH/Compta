@@ -23,6 +23,7 @@ def submit():
     
     file = request.files['file']
     rib_file = request.files.get('rib')  # Utilisez get pour éviter une KeyError si le champ n'est pas présent
+    rib_filename = None  # Assurez-vous que la variable est définie même si elle n'est pas dans le if
 
     if file.filename.endswith(('.pdf', '.jpg', '.jpeg', '.png')):
 
@@ -50,15 +51,14 @@ def submit():
             rib_file.save(rib_file_path)
 
         # Si le fichier RIB est déjà un PDF, le renommer en RIB-{Nom}.pdf
-        if rib_filename.lower().endswith('.pdf'):
+        if rib_filename and rib_filename.lower().endswith('.pdf'):
             os.rename(rib_file_path, os.path.join(folder_name, f"RIB-{name}.pdf"))
-        else:
-            # Sinon, convertir l'image en PDF
+        elif rib_filename:
             generate_rib_pdf(rib_file_path, folder_name, name)
 
         merge_pdfs(folder_name, name)
 
-        return 'Formulaire soumis avec succès!'
+        return render_template('succes.html')
     else:
         return 'Format de fichier non pris en charge. Veuillez utiliser un fichier PDF, JPG, JPEG ou PNG.'
 

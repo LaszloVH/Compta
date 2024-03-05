@@ -1,12 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'media',
-  content: [],
+  content: [
+    "./templates/*.html",
+    "./app.py",
+  ],
   theme: {
     extend: {},
   },
   plugins: [
     require('@tailwindcss/forms'),
-  ]
-}
-
+  ],
+  corePlugins: {
+    container: false,
+  },
+  variants: {},
+};
