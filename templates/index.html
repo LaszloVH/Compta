@@ -12,7 +12,10 @@
       <div class="border-b border-gray-900/10">
         <h2 class="text-center text-lg text-base font-semibold leading-7 text-gray-900">Nouvelle demande de remboursement</h2>
 
-        <label for="name" class="block font-bold">E-mail (obligatoire) :</label>
+        <label for="name" class="block font-bold">Nom :</label>
+        <input type="text" id="email" name="email" required class="w-full p-2 border rounded-md mt-1"><br>
+
+        <label for="email" class="block font-bold">E-mail :</label>
         <input type="text" id="name" name="name" required class="w-full p-2 border rounded-md mt-1"><br>
 
         <label for="date" class="block font-bold">Date indiqué sur la facture :</label>
@@ -25,7 +28,7 @@
         <input type="text" id="reason" name="reason" required class="w-full p-2 border rounded-md mt-1"><br>
 
         <label for="file" class="block font-bold">Facture (PDF, JPG, JPEG, PNG) :</label>
-        <input type="file" id="file" name="file" accept=".pdf, .jpg, .jpeg, .png" required class="w-full p-2 border rounded-md mt-1"><br>
+        <input type="file" id="file" name="facture" accept=".pdf, .jpg, .jpeg, .png" required class="w-full p-2 border rounded-md mt-1"><br>
 
         <label for="rib" class="block font-bold">RIB (facultatif) :</label>
         <input type="file" id="rib" name="rib" accept=".pdf, .jpg, .jpeg, .png" class="w-full p-2 border rounded-md mt-1"><br>

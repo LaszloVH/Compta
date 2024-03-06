@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, send_file
-from reportlab.pdfgen import canvas
 from werkzeug.utils import secure_filename
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -17,6 +16,7 @@ def index():
 @app.route('/submit', methods=['POST'])
 def submit():
     name = request.form['name']
+    email = request.form['email']
     date = request.form['date']
     amount = request.form['amount']
     reason = request.form['reason']
@@ -39,7 +39,7 @@ def submit():
         file.save(file_path)
 
         if file.filename.endswith('.pdf'):
-            generate_info_pdf(name, date, amount, reason)
+            generate_info_pdf(name, email, date, amount, reason)
         elif file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
             generate_facture_pdf(file_path, folder_name)
             generate_info_pdf(name, date, amount, reason)
@@ -63,11 +63,11 @@ def submit():
         return 'Format de fichier non pris en charge. Veuillez utiliser un fichier PDF, JPG, JPEG ou PNG.'
 
 
-def generate_info_pdf(name, date, amount, reason):
+def generate_info_pdf(name, email, date, amount, reason):
     # Créer un fichier PDF avec les informations dans un tableau de 4 colonnes
     pdf = SimpleDocTemplate(f'uploads/{date}-{reason}/info.pdf', pagesize=letter)
-    data = [['Blaze :', 'Date :', 'Montant :', 'Raison :'],
-            [name, date, amount, reason]]
+    data = [['Blaze :', 'Email', 'Date :', 'Montant :', 'Raison :'],
+            [name, email, date, amount, reason]]
     table = Table(data)
 
     # Ajouter un style au tableau pour rendre les bordures apparentes
