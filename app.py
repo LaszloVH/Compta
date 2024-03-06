@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, flash
 from werkzeug.utils import secure_filename
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -8,6 +8,7 @@ import os
 import img2pdf
 
 app = Flask(__name__)
+app.secret_key = '123456'
 
 @app.route('/')
 def index():
@@ -16,14 +17,21 @@ def index():
 @app.route('/submit', methods=['POST'])
 def submit():
     name = request.form['name']
-    email = request.form['email']
     date = request.form['date']
-    amount = request.form['amount']
+    amount = request.form['amount']        
     reason = request.form['reason']
     
     file = request.files['file']
     rib_file = request.files.get('rib')  # Utilisez get pour éviter une KeyError si le champ n'est pas présent
     rib_filename = None  # Assurez-vous que la variable est définie même si elle n'est pas dans le if
+    amount_error = False # Assurez-vous que la variable est définie même si elle n'est pas dans le if
+
+    try:
+        amount = float(amount)
+    except ValueError:
+        flash('Le montant doit être un nombre.', 'error')
+        amount_error = True
+        return render_template('index.html', name=name, date=date, amount=amount, reason=reason, file=file, rib=rib_file, amount_error=amount_error)
 
     if file.filename.endswith(('.pdf', '.jpg', '.jpeg', '.png')):
 
@@ -39,7 +47,7 @@ def submit():
         file.save(file_path)
 
         if file.filename.endswith('.pdf'):
-            generate_info_pdf(name, email, date, amount, reason)
+            generate_info_pdf(name, date, amount, reason)
         elif file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
             generate_facture_pdf(file_path, folder_name)
             generate_info_pdf(name, date, amount, reason)
@@ -63,11 +71,11 @@ def submit():
         return 'Format de fichier non pris en charge. Veuillez utiliser un fichier PDF, JPG, JPEG ou PNG.'
 
 
-def generate_info_pdf(name, email, date, amount, reason):
+def generate_info_pdf(name, date, amount, reason):
     # Créer un fichier PDF avec les informations dans un tableau de 4 colonnes
     pdf = SimpleDocTemplate(f'uploads/{date}-{reason}/info.pdf', pagesize=letter)
-    data = [['Blaze :', 'Email', 'Date :', 'Montant :', 'Raison :'],
-            [name, email, date, amount, reason]]
+    data = [['Blaze :', 'Date :', 'Montant :', 'Raison :'],
+            [name, date, amount, reason]]
     table = Table(data)
 
     # Ajouter un style au tableau pour rendre les bordures apparentes

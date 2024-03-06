@@ -8,30 +8,47 @@
 </head>
 
 <body>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% set border_class = 'border' %}
+    {% for category, message in messages %}
+      {% if category == 'error' %}
+        {% set border_class = 'border-red-500' %}
+      {% endif %}
+    {% endfor %}
+  {% endwith %}
+
   <form method="POST" action="/submit" enctype="multipart/form-data" class="basis-1/2 max-w-md mx-auto mt-4 p-4 bg-gray-100 rounded-md">
       <div class="border-b border-gray-900/10">
         <h2 class="text-center text-lg text-base font-semibold leading-7 text-gray-900">Nouvelle demande de remboursement</h2>
 
         <label for="name" class="block font-bold">Nom :</label>
-        <input type="text" id="email" name="email" required class="w-full p-2 border rounded-md mt-1"><br>
-
-        <label for="email" class="block font-bold">E-mail :</label>
-        <input type="text" id="name" name="name" required class="w-full p-2 border rounded-md mt-1"><br>
+        <input type="text" id="name" name="name" value="{{ name }}" required class="w-full p-2 border rounded-md mt-1">
 
         <label for="date" class="block font-bold">Date indiqué sur la facture :</label>
-        <input type="date" id="date" name="date" required class="w-full p-2 border rounded-md mt-1"><br>
+        <input type="date" id="date" name="date" value="{{ date }}" required class="w-full p-2 border rounded-md mt-1"><br>
 
         <label for="amount" class="block font-bold">Montant :</label>
-        <input type="text" id="amount" name="amount" required class="w-full p-2 border rounded-md mt-1"><br>
+        <input type="text" id="amount" name="amount" value="{{ amount }}" class="w-full p-2 {% if amount_error %}border-red-500 bg-red-100{% else %}border{% endif %} rounded-md mt-1"><br>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              {% if category == 'error' %}
+                <p class="text-red-500 font-semibold">{{ message }}</p>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
+        
         <label for="reason" class="block font-bold">Motif :</label>
-        <input type="text" id="reason" name="reason" required class="w-full p-2 border rounded-md mt-1"><br>
+        <input type="text" id="reason" name="reason" value="{{ reason }}" required class="w-full p-2 border rounded-md mt-1"><br>
 
         <label for="file" class="block font-bold">Facture (PDF, JPG, JPEG, PNG) :</label>
-        <input type="file" id="file" name="facture" accept=".pdf, .jpg, .jpeg, .png" required class="w-full p-2 border rounded-md mt-1"><br>
+        <input type="file" id="file" name="file" value="{{ file }}" accept=".pdf, .jpg, .jpeg, .png" required class="w-full p-2 border rounded-md mt-1"><br>
 
         <label for="rib" class="block font-bold">RIB (facultatif) :</label>
-        <input type="file" id="rib" name="rib" accept=".pdf, .jpg, .jpeg, .png" class="w-full p-2 border rounded-md mt-1"><br>
+        <input type="file" id="rib" name="rib" value="{{ rib }}" accept=".pdf, .jpg, .jpeg, .png" class="w-full p-2 border rounded-md mt-1"><br>
 
         <input type="submit" value="Soumettre" class="w-full p-2 bg-gradient-to-r from-lime-400 to-green-600 text-white text-lg font-semibold rounded-md mt-4 cursor-pointer">
       </div>
